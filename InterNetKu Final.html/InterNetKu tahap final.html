@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InterNetKu — Bagaimana Internet Bekerja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* TEMA INTERNET BARU: NAVY, LIGHT BLUE, GOLD & CLEAN TEXT */
+    --bg: #0B3C5D; /* Biru Tua / Navy */
+    --bg-2: #082d46; /* Navy yang lebih gelap sedikit untuk kedalaman */
+    --surface: #134e75; /* Kombinasi Navy menuju Biru Muda */
+    --surface-2: #1c5f8c; /* Permukaan sekunder */
+    --line: #328CC1; /* Biru Muda untuk garis pembatas */
+    --text: #F5F7FA; /* Putih / Abu Terang untuk teks bersih */
+    --muted: #a3cce3; /* Biru muda pudar untuk teks sekunder */
+    --mint: #D9B310; /* Emas / Kuning Aksen untuk CTA utama */
+    --mint-dim: #ab8c0c;
+    --amber: #D9B310; /* Emas / Kuning */
+    --coral: #ff5555;
+    --violet: #328CC1; /* Digantikan dengan Biru Muda */
+    --radius: 18px;
+    --disp: "Baloo 2", system-ui, sans-serif;
+    --body: "Plus Jakarta Sans", system-ui, sans-serif;
+    --mono: "JetBrains Mono", monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    /* BACKGROUND BERGRADASI DENGAN PALET WARNA BARU */
+    background:
+      radial-gradient(800px 400px at 0% 0%, rgba(217, 179, 16, 0.1) 0%, transparent 70%),
+      radial-gradient(1000px 600px at 100% 100%, rgba(50, 140, 193, 0.2) 0%, transparent 70%),
+      radial-gradient(600px 500px at 50% 30%, rgba(11, 60, 93, 0.5) 0%, transparent 80%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{text-decoration:none; color:inherit;}
+  ::selection{background:var(--mint); color:#000000;}
+
+  a:focus-visible, button:focus-visible, .opt:focus-visible, input:focus-visible{
+    outline:3px solid var(--mint); outline-offset:3px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  /* ---------- LOGIN SCREEN ---------- */
+  #loginScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 40px; width: 100%; max-width: 420px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+  .login-card h2 { font-family: var(--disp); font-size: 2rem; margin: 0 0 10px; color: var(--text); }
+  .login-card p { color: var(--muted); font-size: 0.95rem; margin: 0 0 24px; }
+  .form-group { text-align: left; margin-bottom: 18px; }
+  .form-group label { display: block; font-family: var(--mono); font-size: 0.8rem; color: var(--mint); margin-bottom: 6px; text-transform: uppercase; }
+  .form-group input {
+    width: 100%; background: var(--F5F7FA); border: 1px solid var(--line);
+    padding: 12px 16px; border-radius: 10px; color: var(--text); font-family: var(--body); font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--mint); }
+  .login-error { color: var(--coral); font-size: 0.85rem; margin-top: -10px; margin-bottom: 14px; text-align: left; min-height: 1.2em; display: none; }
+  .login-hint { color: var(--muted); font-size: 0.78rem; margin: -8px 0 18px; text-align: left; }
+
+  .login-tabs{display:flex; gap:8px; background:var(--bg-2); border:1px solid var(--line); border-radius:12px; padding:5px; margin-bottom:26px;}
+  .login-tab{flex:1; background:transparent; border:none; color:var(--muted); font-family:var(--body); font-weight:700; font-size:.88rem; padding:10px 8px; border-radius:8px; cursor:pointer; transition:background .2s, color .2s;}
+  .login-tab.active{background:var(--mint); color:#000000;}
+
+  /* ---------- TEACHER DASHBOARD ---------- */
+  #teacherDashboard{display:none;}
+  .teacher-nav-group{display:flex; align-items:center; gap:4px; background:var(--bg-2); border:1px solid var(--line); border-radius:14px; padding:4px; flex-wrap:wrap;}
+  .teacher-tab-btn{
+    background:transparent; border:none; color:var(--muted); cursor:pointer;
+    padding:9px 16px; border-radius:10px; font-family:var(--body); font-weight:600; font-size:.85rem;
+    transition:background .2s, color .2s;
+  }
+  .teacher-tab-btn:hover{color:var(--text); background:rgba(255,255,255,.04);}
+  .teacher-tab-btn.active{color:var(--mint); background:rgba(219,179,16,.15);}
+  .teacher-panel{display:none;}
+  .teacher-panel.active-panel{display:block; animation:pageFadeIn .4s ease;}
+
+  .panel-card{background:linear-gradient(180deg, var(--surface), var(--surface-2)); border:1px solid var(--line); border-radius:var(--radius); padding:28px; margin-bottom:24px; box-shadow:0 30px 60px -30px rgba(0,0,0,.6);}
+  .panel-card h3{font-family:var(--disp); font-size:1.25rem; margin:0 0 6px;}
+  .panel-card .panel-desc{color:var(--muted); font-size:.9rem; margin:0 0 20px;}
+
+  .data-table{width:100%; border-collapse:collapse; font-size:.92rem;}
+  .data-table th{text-align:left; font-family:var(--mono); font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; color:var(--mint); padding:10px 12px; border-bottom:1px solid var(--line);}
+  .data-table td{padding:12px; border-bottom:1px solid var(--line); color:var(--text);}
+  .data-table tr:last-child td{border-bottom:none;}
+  .badge{font-family:var(--mono); font-size:.78rem; padding:4px 10px; border-radius:999px; display:inline-block;}
+  .badge-done{background:rgba(219,179,16,.15); color:var(--mint); border:1px solid rgba(219,179,16,.4);}
+  .badge-pending{background:rgba(50,140,193,.15); color:var(--line); border:1px solid rgba(50,140,193,.4);}
+
+  .btn-small{font-family:var(--body); font-weight:700; font-size:.82rem; padding:8px 14px; border-radius:8px; border:1.5px solid var(--line); background:transparent; color:var(--text); cursor:pointer; transition:border-color .2s, color .2s;}
+  .btn-small:hover{border-color:var(--mint); color:var(--mint);}
+  .btn-danger{border-color:var(--coral); color:var(--coral);}
+  .btn-danger:hover{background:var(--coral); color:var(--bg); border-color:var(--coral);}
+
+  .inline-form{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:22px;}
+  .inline-form .form-group{margin-bottom:0; flex:1; min-width:160px;}
+  .inline-form textarea{width:100%; background:var(--bg-2); border:1px solid var(--line); padding:12px 16px; border-radius:10px; color:var(--text); font-family:var(--body); font-size:.95rem; resize:vertical; min-height:44px;}
+  .inline-form textarea:focus{border-color:var(--mint); outline:none;}
+
+  .materi-list{display:grid; gap:16px;}
+  .materi-card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 22px;}
+  .materi-card .materi-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:8px;}
+  .materi-card h4{font-family:var(--disp); font-size:1.05rem; margin:0; color:var(--mint);}
+  .materi-card .materi-date{font-family:var(--mono); font-size:.75rem; color:var(--muted);}
+  .materi-card p{margin:0; color:var(--text); font-size:.92rem; white-space:pre-wrap;}
+  .empty-note{color:var(--muted); font-size:.92rem; font-style:italic; padding:14px 0;}
+  
+  /* ---------- MAIN APP CONTENT ---------- */
+  #mainContent { display: none; }
+
+  /* ---------- NAV ---------- */
+  header.nav{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter: blur(10px);
+    background:rgba(11, 60, 93, 0.85);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--disp); font-weight:800; font-size:1.35rem; letter-spacing:0.2px;
+  }
+  .logo .dot{width:11px; height:11px; border-radius:50%; background:var(--mint); box-shadow:0 0 14px 3px rgba(219, 179, 16, 0.6); animation:pulse 2.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1); opacity:1;} 50%{transform:scale(1.4); opacity:.6;}}
+  nav.links{display:flex; align-items: center; gap:8px; font-size:.95rem; font-weight:600;}
+  nav.links a{color:var(--muted); transition:color .2s;}
+  nav.links a:hover{color:var(--text);}
+
+  /* ---------- PAGE ICON NAVIGATION ---------- */
+  .page-nav-group{display:flex; align-items:center; gap:4px; background:var(--bg-2); border:1px solid var(--line); border-radius:14px; padding:4px;}
+  .nav-icon-btn{
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:transparent; border:none; color:var(--muted); cursor:pointer;
+    padding:8px 12px; border-radius:10px; font-family:var(--body); font-weight:600; font-size:.68rem;
+    transition:background .2s, color .2s;
+  }
+  .nav-icon-btn svg{width:19px; height:19px; stroke:currentColor; fill:none; stroke-width:1.8;}
+  .nav-icon-btn:hover{color:var(--text); background:rgba(255,255,255,.04);}
+  .nav-icon-btn.active{color:var(--mint); background:rgba(219, 179, 16, 0.15);}
+  .nav-icon-btn.active svg{filter:drop-shadow(0 0 6px rgba(219, 179, 16, 0.5));}
+  @media (max-width:760px){ .nav-icon-btn span{display:none;} .nav-icon-btn{padding:8px;} }
+
+  /* ---------- PAGE SECTIONS (SPA switching) ---------- */
+  .page-section{display:none;}
+  .page-section.active-page{display:block; animation:pageFadeIn .4s ease;}
+  @keyframes pageFadeIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+  .logout-btn {
+    background: transparent; border: 1px solid var(--coral); color: var(--coral);
+    padding: 6px 14px; border-radius: 8px; font-family: var(--body); font-size: 0.85rem; cursor: pointer; font-weight: 600;
+    transition: background 0.2s, color 0.2s;
+  }
+  .logout-btn:hover { background: var(--coral); color: var(--bg); }
+
+  /* ---------- HERO ---------- */
+  .hero{padding:88px 0 60px; position:relative;}
+  .hero-grid{
+    display:grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; align-items: center;
+  }
+  @media (max-width: 850px){
+    .hero-grid{grid-template-columns: 1fr;}
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.06em;
+    color:var(--mint); background:rgba(219, 179, 16, 0.08);
+    border:1px solid rgba(219, 179, 16, 0.3); padding:6px 14px; border-radius:999px;
+    margin-bottom:22px;
+  }
+  h1.headline{
+    font-family:var(--disp); font-weight:800;
+    font-size:clamp(2.4rem, 5.4vw, 4.1rem);
+    line-height:1.04; margin:0 0 20px; max-width:820px;
+    letter-spacing:-0.01em;
+  }
+  h1.headline .accent{color:var(--mint); text-shadow: 0 0 15px rgba(219,179,16,0.3);}
+  p.sub{
+    font-size:1.15rem; color:var(--muted); max-width:600px; margin:0 0 34px;
+  }
+  .cta-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--body); font-weight:700; font-size:.98rem;
+    padding:14px 26px; border-radius:12px; border:none; cursor:pointer;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--mint); color:#000000; box-shadow:0 8px 24px -8px rgba(219, 179, 16, 0.55);}
+  .btn-primary:hover{box-shadow:0 10px 30px -6px rgba(219, 179, 16, 0.7); transform:translateY(-1px);}
+  .btn-ghost{background:transparent; color:var(--text); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--mint); color:var(--mint);}
+
+  /* ANIMASI KARAKTER ROUTER HOMEPAGE */
+  .router-space{
+    display:flex; justify-content: center; align-items: center; padding:20px;
+  }
+  .router-card {
+    background: radial-gradient(circle, var(--surface-2) 0%, var(--surface) 100%);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    padding: 30px; width: 100%; max-width: 320px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    text-align: center;
+    animation: routerFloat 4s ease-in-out infinite;
+    position: relative; overflow: visible;
+  }
+  @keyframes routerFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-12px) rotate(1deg); }
+  }
+  .router-wave {
+    fill: none; stroke: var(--mint); stroke-width: 2.5; opacity: 0;
+    transform-origin: 50px 55px;
+    animation: routerPulse 3s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  }
+  .w2 { animation-delay: 1s; }
+  .w3 { animation-delay: 2s; }
+  @keyframes routerPulse {
+    0% { transform: scale(0.5); opacity: 0; }
+    20% { opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0; stroke: var(--line); }
+  }
+  .router-blink { animation: blinkLight 0.4s ease-in-out alternate infinite; }
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:78px 0;}
+  .sec-head{max-width:640px; margin-bottom:44px;}
+  .kicker{font-family:var(--mono); font-size:.78rem; color:var(--amber); letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px; display:block;}
+  h2.sec-title{font-family:var(--disp); font-weight:700; font-size:clamp(1.7rem,3.2vw,2.4rem); margin:0 0 12px;}
+  p.sec-desc{color:var(--muted); font-size:1.02rem; margin:0;}
+
+  /* ---------- SIMULATION ---------- */
+  .sim-card{
+    background:linear-gradient(180deg, var(--surface), var(--surface-2));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:32px 28px 26px;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,.6);
+  }
+  .sim-toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:14px; margin-bottom:18px;
+  }
+  .stage-tag{
+    font-family:var(--mono); font-size:.85rem; color:var(--mint);
+    background:rgba(219, 179, 16, 0.09); border:1px solid rgba(219, 179, 16, 0.25);
+    padding:7px 14px; border-radius:999px;
+  }
+  .sim-controls{display:flex; gap:10px;}
+  .icon-btn{
+    background:var(--surface-2); border:1px solid var(--line); color:var(--text);
+    padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-family:var(--body); font-size:.9rem;
+    transition:border-color .2s, color .2s;
+  }
+  .icon-btn:hover{border-color:var(--mint); color:var(--mint);}
+
+  .svg-stage{width:100%; display:block; overflow:visible;}
+  
+  /* Clickable interactive station styles */
+  .interactive-st { cursor: pointer; }
+  .interactive-st:hover .station-ring { stroke: var(--line); stroke-width: 3; }
+  .interactive-st:hover .station-label { fill: var(--text); }
+  
+  .station-label{
+    fill:var(--muted); font-family:var(--body); font-size:14px; font-weight:600; transition: fill 0.3s;
+  }
+  .station-label.active{fill:var(--mint);}
+  .station-ring{fill:none; stroke:var(--line); stroke-width:2; transition: stroke 0.3s, stroke-width 0.3s;}
+  .station-ring.active{stroke:var(--mint); filter:drop-shadow(0 0 8px rgba(219, 179, 16, 0.7));}
+  .path-line{fill:none; stroke:#26405f; stroke-width:3; stroke-dasharray:2 10; stroke-linecap:round;}
+  .packet{filter:drop-shadow(0 0 10px rgba(219, 179, 16, 0.9));}
+
+  /* Animated elements inside SVG nodes */
+  .animated-signal { animation: signalFlow 1.5s linear infinite; }
+  @keyframes signalFlow { 0% { opacity: 0.3; } 50% { opacity: 1; fill: var(--mint); } 100% { opacity: 0.3; } }
+  
+  .animated-wave { animation: pulseWave 1.8s infinite; transform-origin: center; }
+  @keyframes pulseWave { 0% { transform: scale(0.9); opacity: 0.4; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.4; } }
+  
+  .animated-server-light { animation: blinkLight 0.6s steps(2, start) infinite; }
+  @keyframes blinkLight { to { visibility: hidden; } }
+
+  .desc-box{
+    margin-top:22px; padding:20px 22px; background:var(--bg-2);
+    border:1px solid var(--line); border-radius:14px;
+    display:flex; gap:16px; align-items:flex-start;
+  }
+  .desc-box .num{
+    font-family:var(--mono); font-weight:700; color:#000000; background:var(--mint);
+    min-width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .desc-box p{margin:0; color:var(--text); font-size:1rem;}
+  .desc-box .stage-name{display:block; font-weight:700; color:var(--mint); margin-bottom:4px; font-size:.92rem; letter-spacing:.02em;}
+
+  /* ---------- TIMELINE (5 tahap) ---------- */
+  .timeline{display:grid; grid-template-columns:repeat(5,1fr); gap:16px;}
+  @media (max-width:900px){.timeline{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.timeline{grid-template-columns:1fr;}}
+  .t-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:20px 18px; transition:border-color .2s, transform .2s; cursor: pointer;
+  }
+  .t-card:hover{border-color:var(--mint); transform:translateY(-3px);}
+  .t-card .t-num{font-family:var(--mono); color:var(--mint); font-size:.85rem; margin-bottom:10px; display:block;}
+  .t-card h3{font-family:var(--disp); font-size:1.05rem; margin:0 0 8px; font-weight:600;}
+  .t-card p{color:var(--muted); font-size:.9rem; margin:0;}
+
+  /* ---------- CHARACTERS ---------- */
+  .char-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:stretch;
+  }
+  @media (max-width:760px){.char-grid{grid-template-columns:1fr;}}
+  .char-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px; text-align:center; transition: transform 0.3s;
+  }
+  .char-card:hover { transform: scale(1.02); }
+  .char-card h3{font-family:var(--disp); margin:14px 0 6px; font-size:1.2rem;}
+  .char-card p{color:var(--muted); font-size:.92rem; margin:0;}
+
+  /* ---------- VIDEO PAGE ---------- */
+  .video-container {
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px; max-width: 860px; margin: 0 auto;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  }
+  .video-wrapper {
+    position: relative; width: 100%; border-radius: 12px; overflow: hidden;
+    background: #000; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    aspect-ratio: 16/9;
+  }
+  .video-wrapper video {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+  }
+
+  /* ---------- QUIZ ---------- */
+  .quiz-card{
+    background:linear-gradient(180deg, var(--surface), var(--surface-2));
+    border:1px solid var(--line); border-radius:var(--radius); padding:32px;
+  }
+  .quiz-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:10px;}
+  .quiz-progress{font-family:var(--mono); color:var(--muted); font-size:.85rem;}
+  .score-pill{font-family:var(--mono); background:rgba(219, 179, 16, 0.09); border:1px solid rgba(219, 179, 16, 0.3); color:var(--mint); padding:6px 14px; border-radius:999px; font-size:.85rem;}
+  .q-text{font-family:var(--disp); font-size:1.25rem; font-weight:600; margin:0 0 22px;}
+  .opts{display:grid; gap:12px;}
+  .opt{
+    text-align:left; background:var(--bg-2); border:1.5px solid var(--line); color:var(--text);
+    padding:14px 18px; border-radius:12px; cursor:pointer; font-family:var(--body); font-size:.98rem;
+    transition:border-color .15s, background .15s;
+  }
+  .opt:hover{border-color:var(--mint);}
+  .opt.correct{border-color:var(--mint); background:rgba(219, 179, 16, 0.12); color:var(--mint);}
+  .opt.wrong{border-color:var(--coral); background:rgba(255,107,107,.12); color:var(--coral);}
+  .opt[disabled]{cursor:default;}
+  .feedback{margin-top:18px; font-size:.95rem; min-height:1.4em; color:var(--muted);}
+  .quiz-nav{display:flex; justify-content:flex-end; margin-top:20px;}
+  .quiz-done{text-align:center; padding:20px 0;}
+  .quiz-done .big{font-family:var(--disp); font-size:2.4rem; color:var(--mint); font-weight:800;}
+
+  footer{border-top:1px solid var(--line); padding:40px 0 50px; margin-top:20px;}
+  .foot-inner{display:flex; justify-content:space-between; flex-wrap:wrap; gap:14px; color:var(--muted); font-size:.86rem;}
+  .foot-inner strong{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" id="tabSiswa" data-role="siswa">👤 Siswa</button>
+      <button class="login-tab" id="tabGuru" data-role="guru">🧑‍🏫 Guru</button>
+    </div>
+    <h2 id="loginTitle">Masuk ke InterNetKu</h2>
+    <p id="loginSubtitle">Gunakan Nomor Induk Siswa (NIS) dan kata sandi yang diberikan gurumu.</p>
+    <div class="form-group">
+      <label for="username" id="usernameLabel">Nomor Induk Siswa (NIS)</label>
+      <input type="text" id="username" placeholder="masukkan username" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="password">Kata Sandi</label>
+      <input type="password" id="password" placeholder="Masukkan kata sandi">
+    </div>
+    <p class="login-hint" id="loginHint">NIS terdaftar: 11358001 s/d 11358015. masukkan kata sandimu.</p>
+    <div class="login-error" id="loginError">NIS atau kata sandi salah. Coba lagi.</div>
+    <button class="btn btn-primary" id="loginBtn" style="width: 100%; justify-content: center; margin-top: 10px;">Masuk Sekarang →</button>
+  </div>
+</div>
+
+<div id="mainContent">
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="logo"><span class="dot"></span> InterNetKu</div>
+      <nav class="links">
+        <div class="page-nav-group" id="pageNavGroup">
+          <button class="nav-icon-btn" data-page="beranda" title="Beranda">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 11.5 12 4l9 7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 10v9h13v-9"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 19v-6h5v6"/></svg>
+            <span>Beranda</span>
+          </button>
+          <button class="nav-icon-btn" data-page="simulasi" title="Simulasi">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-linecap="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 8.5 16 12l-6 3.5z"/></svg>
+            <span>Simulasi</span>
+          </button>
+          <button class="nav-icon-btn" data-page="tahapan" title="Tahapan">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h16"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>
+            <span>Tahapan</span>
+          </button>
+          <button class="nav-icon-btn" data-page="video" title="Video Internet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+            <span>Video</span>
+          </button>
+          <button class="nav-icon-btn" data-page="kuis" title="Kuis">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-linecap="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.2a2.5 2.5 0 0 1 4.9.7c0 1.6-2.2 1.8-2.4 3.4"/><circle cx="12" cy="16.6" r="0.9" fill="currentColor" stroke="none"/></svg>
+            <span>Kuis</span>
+          </button>
+          <button class="nav-icon-btn" data-page="materi" title="Materi Guru">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.5c-2-1.4-4.6-2-7-2v13c2.4 0 5 .6 7 2 2-1.4 4.6-2 7-2v-13c-2.4 0-5 .6-7 2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.5v13"/></svg>
+            <span>Materi</span>
+          </button>
+          <button class="nav-icon-btn" data-page="tentang" title="Tentang">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-linecap="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 11v5.5"/><circle cx="12" cy="7.8" r="0.9" fill="currentColor" stroke="none"/></svg>
+            <span>Tentang</span>
+          </button>
+        </div>
+        <span class="login-hint" id="navUserBadge" style="margin:0 4px; white-space:nowrap;"></span>
+        <button class="logout-btn" id="logoutBtn">Keluar</button>
+      </nav>
+    </div>
+  </header>
+
+  <div id="beranda" class="page-section">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Informatika · SMP · Cara Kerja Internet</span>
+        <h1 class="headline">Lihat pesanmu <span class="accent">melintasi dunia</span> — lalu kembali dalam sekejap.</h1>
+        <p class="sub">Setiap kali kamu membuka chat atau video, datamu melakukan perjalanan lima tahap: dari perangkatmu, lewat router, ISP, jaringan internet global, sampai ke server — lalu balik lagi. Yuk jalankan simulasinya.</p>
+        <div class="cta-row">
+          <button class="btn btn-primary" onclick="switchPage('simulasi')">▶ Mulai Simulasi</button>
+          <button class="btn btn-ghost" onclick="switchPage('video')">📺 Tonton Video</button>
+        </div>
+      </div>
+      
+      <div class="router-space">
+        <div class="router-card">
+          <svg width="100" height="110" viewBox="0 0 100 110" style="overflow:visible;">
+            <circle class="router-wave w1" cx="50" cy="55" r="20" />
+            <circle class="router-wave w2" cx="50" cy="55" r="35" />
+            <circle class="router-wave w3" cx="50" cy="55" r="50" />
+            
+            <line x1="30" y1="40" x2="15" y2="10" stroke="var(--mint)" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="15" cy="10" r="4" fill="var(--line)"/>
+            
+            <line x1="70" y1="40" x2="85" y2="10" stroke="var(--mint)" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="85" cy="10" r="4" fill="var(--line)"/>
+            
+            <rect x="15" y="40" width="70" height="36" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-width="2"/>
+            
+            <circle cx="38" cy="54" r="3.5" fill="var(--text)" />
+            <circle cx="62" cy="54" r="3.5" fill="var(--text)" />
+            <path d="M46 60 Q50 64 54 60" stroke="var(--text)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            
+            <circle class="router-blink" cx="28" cy="68" r="2" fill="var(--mint)"/>
+            <circle class="router-blink" cx="36" cy="68" r="2" fill="var(--mint)" style="animation-delay:0.1s;"/>
+            <circle class="router-blink" cx="44" cy="68" r="2" fill="var(--mint)" style="animation-delay:0.2s;"/>
+            <circle class="router-blink" cx="52" cy="68" r="2" fill="var(--amber)" style="animation-delay:0.3s;"/>
+            
+            <line x1="35" y1="76" x2="30" y2="85" stroke="var(--line)" stroke-width="3" stroke-linecap="round"/>
+            <line x1="65" y1="76" x2="70" y2="85" stroke="var(--line)" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <div style="font-family:var(--mono); font-size:0.75rem; color:var(--mint); margin-top:10px; font-weight:700; letter-spacing:0.05em;">ROUTER-BOT v1.0</div>
+          <p style="font-size:0.8rem; color:var(--muted); margin:4px 0 0;">Sedang aktif memancarkan paket data Wi-Fi...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="karakter">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Personalisasi</span>
+        <h2 class="sec-title">Ditemani Sinta &amp; Bima</h2>
+        <p class="sec-desc">Dua karakter siswa yang menemani proses belajar, supaya konsep teknis terasa dekat dengan pengalamanmu sehari-hari.</p>
+      </div>
+      <div class="char-grid">
+        <div class="char-card">
+          <svg width="90" height="110" viewBox="0 0 90 110">
+            <circle cx="45" cy="28" r="20" fill="#ffd9a8"/>
+            <path class="avatar-eye" d="M25,20 Q45,-4 65,20 L65,32 Q45,10 25,32 Z" fill="#3a2a1e"/>
+            <rect x="20" y="48" width="50" height="50" rx="16" fill="#ff6b6b"/>
+            <rect x="30" y="66" width="30" height="20" rx="3" fill="#233a58"/>
+          </svg>
+          <h3>Sinta</h3>
+          <p>Mengirim pesan lewat laptop — memicu seluruh perjalanan data di simulasi.</p>
+        </div>
+        <div class="char-card">
+          <svg width="90" height="110" viewBox="0 0 90 110">
+            <circle cx="45" cy="28" r="20" fill="#f0c090"/>
+            <path class="avatar-eye" d="M24,16 Q45,-2 66,16 L66,26 L24,26 Z" fill="#20242b"/>
+            <rect x="20" y="48" width="50" height="50" rx="16" fill="#4c6ef5"/>
+            <rect x="36" y="64" width="18" height="26" rx="4" fill="#233a58"/>
+          </svg>
+          <h3>Bima</h3>
+          <p>Menerima balasan di ponselnya — mewakili perangkat penerima di ujung jaringan.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <section id="simulasi" class="page-section">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Simulasi Interaktif (Fitur Klik Aktif)</span>
+        <h2 class="sec-title">Perjalanan satu paket data</h2>
+        <p class="sec-desc">Klik ikon node/stasiun mana saja di bawah ini secara langsung untuk mempelajari detail teknisnya secara instan, atau tekan tombol "Mulai".</p>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-toolbar">
+          <span class="stage-tag" id="stageTag">Siap dimulai</span>
+          <div class="sim-controls">
+            <button class="icon-btn" id="playBtn">▶ Mulai</button>
+            <button class="icon-btn" id="resetBtn">↺ Ulangi</button>
+          </div>
+        </div>
+
+        <svg class="svg-stage" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg">
+          <path id="mainPath" class="path-line" d="M100,180 C220,80 260,80 340,150 S 460,230 580,150 S 700,70 820,150 S 940,230 1050,150" />
+
+          <g id="st0" class="interactive-st" transform="translate(100,150)">
+            <circle class="station-ring" r="46"/>
+            <g transform="translate(-22,-18)">
+              <rect x="0" y="0" width="44" height="28" rx="3" fill="#233a58"/>
+              <rect class="avatar-screen" x="3" y="3" width="38" height="20" rx="1" fill="#0b1420"/>
+              <rect class="animated-signal" x="8" y="7" width="10" height="2" fill="#D9B310" />
+              <rect class="animated-signal" x="8" y="12" width="16" height="2" fill="#D9B310" style="animation-delay:0.4s;"/>
+              <rect x="-4" y="28" width="52" height="6" rx="2" fill="#2c4568"/>
+            </g>
+            <text class="station-label" x="0" y="70" text-anchor="middle">Perangkatmu</text>
+          </g>
+
+          <g id="st1" class="interactive-st" transform="translate(340,150)">
+            <circle class="station-ring" r="46"/>
+            <g transform="translate(-20,-14)">
+              <rect x="0" y="10" width="40" height="16" rx="4" fill="#233a58"/>
+              <line x1="8" y1="10" x2="4" y2="-6" stroke="#3a5a82" stroke-width="3" stroke-linecap="round"/>
+              <line x1="20" y1="10" x2="20" y2="-8" stroke="#3a5a82" stroke-width="3" stroke-linecap="round"/>
+              <line x1="32" y1="10" x2="36" y2="-6" stroke="#3a5a82" stroke-width="3" stroke-linecap="round"/>
+              <circle class="animated-server-light" cx="6" cy="18" r="2" fill="#D9B310"/>
+              <circle class="animated-server-light" cx="12" cy="18" r="2" fill="#D9B310" style="animation-delay:0.2s;"/>
+              <circle class="animated-server-light" cx="18" cy="18" r="2" fill="#D9B310" style="animation-delay:0.4s;"/>
+            </g>
+            <text class="station-label" x="0" y="70" text-anchor="middle">Router Rumah</text>
+          </g>
+
+          <g id="st2" class="interactive-st" transform="translate(580,150)">
+            <circle class="station-ring" r="46"/>
+            <g transform="translate(-24,-24)">
+              <rect x="10" y="2" width="28" height="44" rx="4" fill="#233a58"/>
+              <rect x="14" y="6" width="20" height="6" rx="1" fill="#0b1420"/>
+              <circle class="animated-server-light" cx="18" cy="9" r="1.5" fill="#D9B310"/>
+              <rect x="14" y="16" width="20" height="6" rx="1" fill="#0b1420"/>
+              <circle class="animated-server-light" cx="24" cy="19" r="1.5" fill="#D9B310"/>
+              <rect x="14" y="26" width="20" height="6" rx="1" fill="#0b1420"/>
+              <circle class="animated-server-light" cx="30" cy="29" r="1.5" fill="#D9B310" style="animation-delay:0.3s;"/>
+              <rect x="14" y="36" width="20" height="6" rx="1" fill="#0b1420"/>
+            </g>
+            <text class="station-label" x="0" y="70" text-anchor="middle">Jaringan ISP</text>
+          </g>
+
+          <g id="st3" class="interactive-st" transform="translate(820,150)">
+            <circle class="station-ring" r="46"/>
+            <g transform="translate(-25,-25)">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="#233a58" stroke-width="4"/>
+              <path class="animated-wave" d="M14 25 Q25 10 36 25 T48 25" stroke="#D9B310" stroke-width="2" fill="none"/>
+              <path class="animated-wave" d="M10 25 Q25 0 40 25 T50 25" stroke="#328CC1" stroke-width="1.5" fill="none" style="animation-delay:0.5s;"/>
+            </g>
+            <text class="station-label" x="0" y="70" text-anchor="middle">Internet Global</text>
+          </g>
+
+          <g id="st4" class="interactive-st" transform="translate(1050,150)">
+            <circle class="station-ring" r="46"/>
+            <g transform="translate(-24,-24)">
+              <rect x="2" y="4" width="44" height="38" rx="5" fill="#233a58"/>
+              <rect x="6" y="8" width="32" height="8" rx="2" fill="#0b1420"/>
+              <circle class="animated-server-light" cx="12" cy="12" r="2" fill="#D9B310"/>
+              <circle class="animated-server-light" cx="18" cy="12" r="2" fill="#D9B310" style="animation-delay:0.2s;"/>
+              <rect x="6" y="20" width="32" height="8" rx="2" fill="#0b1420"/>
+              <circle class="animated-server-light" cx="12" cy="24" r="2" fill="#ff6b6b"/>
+              <rect x="6" y="32" width="32" height="4" rx="1" fill="#1b2c45"/>
+            </g>
+            <text class="station-label" x="0" y="70" text-anchor="middle">Server Tujuan</text>
+          </g>
+
+          <circle id="packet" class="packet" r="8" fill="#D9B310" cx="100" cy="180" />
+        </svg>
+
+        <div class="desc-box">
+          <div class="num" id="stepNum">0</div>
+          <div style="flex:1;">
+            <span class="stage-name" id="stepTitle">Belum dimulai</span>
+            <p id="stepDesc">Tekan tombol "Mulai" di atas untuk melihat data berangkat dari perangkatmu.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tahapan" class="page-section">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Pembagian Segmen</span>
+        <h2 class="sec-title">5 Tahap Perjalanan Data</h2>
+        <p class="sec-desc">Klik salah satu kartu tahapan di bawah ini untuk berpindah ke halaman Simulasi dan melihat lokasinya di diagram.</p>
+      </div>
+      <div class="timeline">
+        <div class="t-card" onclick="goToSimulationStage(0)"><span class="t-num">01</span><h3>Ubah jadi sinyal</h3><p>Perangkatmu mengubah pesan menjadi sinyal digital (kumpulan angka 0 dan 1).</p></div>
+        <div class="t-card" onclick="goToSimulationStage(1)"><span class="t-num">02</span><h3>Lewat router</h3><p>Sinyal dikirim melalui router/modem di rumahmu menuju jaringan luar.</p></div>
+        <div class="t-card" onclick="goToSimulationStage(2)"><span class="t-num">03</span><h3>Masuk ISP</h3><p>Data melewati ISP (penyedia layanan internet) menuju jaringan global.</p></div>
+        <div class="t-card" onclick="goToSimulationStage(3)"><span class="t-num">04</span><h3>Sampai server</h3><p>Data tiba di server tujuan dan diproses sesuai permintaanmu.</p></div>
+        <div class="t-card" onclick="goToSimulationStage(4)"><span class="t-num">05</span><h3>Balik lagi</h3><p>Server mengirim balik respons lewat jalur yang sama hingga muncul di layarmu.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="video" class="page-section">
+    <div class="wrap">
+      <div class="sec-head" style="text-align: center; margin: 0 auto 34px;">
+        <span class="kicker">Media Pembelajaran Kontekstual</span>
+        <h2 class="sec-title">Kayak Gimana Bentuk Internet Sebenernya?</h2>
+        <p class="sec-desc" style="margin: 0 auto; max-width: 600px;">Tonton video edukasi interaktif di bawah ini untuk melihat wujud infrastruktur fisik internet global yang menghubungkan seluruh benua.</p>
+      </div>
+      
+      <div class="video-container">
+        <div class="video-wrapper">
+          <video controls preload="metadata">
+            <source src="Kayak Gimana Bentuk Internet Sebenernya.mp4" type="video/mp4">
+            Browser Anda tidak mendukung pemutaran video HTML5. Silakan periksa file video Anda.
+          </video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="kuis" class="page-section">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Cek Pemahaman</span>
+        <h2 class="sec-title">Kuis singkat, 15 soal</h2>
+        <p class="sec-desc">Jawab sesuai simulasi yang baru saja kamu lihat. Umpan balik langsung muncul setiap kamu menjawab.</p>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-top">
+          <span class="quiz-progress" id="quizProgress">Soal 1 / 15</span>
+          <span class="score-pill" id="quizScore">Skor: 0</span>
+        </div>
+        <div id="quizBody"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="materi" class="page-section">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Dari Guru</span>
+        <h2 class="sec-title">Materi Tambahan</h2>
+        <p class="sec-desc">Materi belajar yang dibagikan langsung oleh gurumu akan muncul di sini.</p>
+      </div>
+      <div class="materi-list" id="studentMateriList"></div>
+    </div>
+  </section>
+
+  <section id="tentang" class="page-section">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker">Tentang Media</span>
+        <h2 class="sec-title">Kenapa dibuat seperti ini?</h2>
+        <p class="sec-desc"> InterNetKu memecah proses "Cara Kerja Internet" yang abstrak menjadi lima tahap kecil (prinsip <em>segmenting</em>) dan menghadirkan karakter siswa (prinsip <em>personalization</em>), sesuai prinsip multimedia learning Mayer.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer>
+      <div class="foot-inner">
+        <span>© 2026 <strong>InterNetKu</strong> — Media Pembelajaran Informatika Komputasi.</span>
+        <span>SMP Negeri Digital</span>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<div id="teacherDashboard">
+  <div class="wrap" style="padding-top:24px; padding-bottom:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:26px; border-bottom:1px solid var(--line); padding-bottom:16px;">
+      <div>
+        <h1 style="font-family:var(--disp); margin:0 0 4px; font-size:1.8rem; color:var(--mint);">Dashboard Guru InterNetKu</h1>
+        <p style="margin:0; color:var(--muted); font-size:.92rem;">Kelola materi belajar, pantau hasil kuis siswa, dan atur akun kelas.</p>
+      </div>
+      <button class="logout-btn" id="teacherLogoutBtn">Keluar</button>
+    </div>
+    
+    <div class="teacher-nav-group" style="margin-bottom:24px;">
+      <button class="teacher-tab-btn active" data-panel="panelNilai">📈 Hasil Kuis Siswa</button>
+      <button class="teacher-tab-btn" data-panel="panelMateri">📚 Kelola Materi Belajar</button>
+      <button class="teacher-tab-btn" data-panel="panelAkun">⚙️ Kelola Akun Siswa</button>
+    </div>
+
+    <div class="teacher-panel active-panel" id="panelNilai">
+      <div class="panel-card">
+        <h3>Nilai Ujian Kuis Populer</h3>
+        <p class="panel-desc">Nilai pengerjaan kuis siswa tercatat secara real-time di bawah ini.</p>
+        <table class="data-table">
+          <thead><tr><th>NIS Siswa</th><th>Nilai Akhir</th><th>Skor Benar</th><th>Waktu Selesai</th></tr></thead>
+          <tbody id="scoreTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="teacher-panel" id="panelMateri">
+      <div class="panel-card">
+        <h3>Tambah Materi untuk Siswa</h3>
+        <p class="panel-desc">Materi yang ditambahkan akan langsung muncul di halaman "Materi" pada akun siswa.</p>
+        <div class="inline-form">
+          <div class="form-group" style="flex:2;">
+            <label for="materiTitle">Judul Materi</label>
+            <input type="text" id="materiTitle" placeholder="Contoh: Ringkasan Protokol TCP/IP">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="materiContent">Isi Materi</label>
+          <textarea id="materiContent" rows="4" placeholder="Tulis penjelasan atau tautan materi di sini..."></textarea>
+        </div>
+        <button class="btn btn-primary" id="addMateriBtn" style="margin-top:6px;">+ Tambahkan Materi</button>
+      </div>
+      <div class="panel-card">
+        <h3>Materi yang Sudah Dibagikan</h3>
+        <p class="panel-desc">Klik "Hapus" untuk menyembunyikan materi dari siswa.</p>
+        <div class="materi-list" id="teacherMateriList"></div>
+      </div>
+    </div>
+
+    <div class="teacher-panel" id="panelAkun">
+      <div class="panel-card">
+        <h3>Tambah Akun Siswa</h3>
+        <p class="panel-desc">Tambahkan NIS dan kata sandi baru untuk siswa.</p>
+        <div class="inline-form">
+          <div class="form-group">
+            <label for="newStudentUser">NIS Siswa</label>
+            <input type="text" id="newStudentUser" placeholder="Contoh: 11358016">
+          </div>
+          <div class="form-group">
+            <label for="newStudentPass">Kata Sandi</label>
+            <input type="text" id="newStudentPass" placeholder="Contoh: IK016!">
+          </div>
+          <button class="btn btn-primary" id="addStudentBtn">+ Tambah Akun</button>
+        </div>
+        <div class="login-error" id="accountError" style="display:none;"></div>
+      </div>
+      <div class="panel-card">
+        <h3>Daftar Akun Siswa</h3>
+        <p class="panel-desc">Kelola NIS dan kata sandi siswa yang terdaftar. Klik "Hapus" untuk menghapus akun.</p>
+        <table class="data-table">
+          <thead><tr><th>NIS</th><th>Kata Sandi</th><th></th></tr></thead>
+          <tbody id="accountTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- GLOBAL FUNCTION FOR STAGE CLICK INTERACTION ---------------- */
+let selectStageDirectly;
+(function(){
+  const path = document.getElementById('mainPath');
+  const packet = document.getElementById('packet');
+  if(!path || !packet) return;
+  const totalLen = path.getTotalLength();
+  const stations = [0,1,2,3,4].map(i => document.getElementById('st'+i));
+  const rings = stations.map(s => s ? s.querySelector('.station-ring') : null);
+  const labels = stations.map(s => s ? s.querySelector('.station-label') : null);
+  const stageTag = document.getElementById('stageTag');
+  const playBtn = document.getElementById('playBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const stepNum = document.getElementById('stepNum');
+  const stepTitle = document.getElementById('stepTitle');
+  const stepDesc = document.getElementById('stepDesc');
+
+  const stages = [
+    { frac: 0.0, title: "Tahap 1 — Mengubah Data Menjadi Sinyal Digital", desc: "Perangkat elektronikmu (seperti laptop/HP) menerjemahkan huruf, gambar, atau suara menjadi deretan data biner berbentuk gelombang elektromagnetik atau pulsa cahaya." },
+    { frac: 0.23, title: "Tahap 2 — Melewati Jalur Router Lokal", desc: "Sinyal nirkabel dikirim menuju router Wi-Fi di rumahmu. Router bertindak seperti polantas yang mengarahkan ke mana paket data harus pergi keluar dari jaringan rumah." },
+    { frac: 0.50, title: "Tahap 3 — Masuk ke Gerbang ISP (Penyedia Internet)", desc: "Dari router, data melesat melalui kabel fiber optik menuju ISP lokal (seperti Telkom Indihome, Biznet, XL). Di sini data diperiksa dan diteruskan ke gerbang internet global." },
+    { frac: 0.75, title: "Tahap 4 — Melintasi Kabel Bawah Laut & Tiba di Server", desc: "Paket datamu melintasi benua lewat jaringan kabel serat optik bawah laut global kecepatan tinggi, kemudian mendarat dengan selamat di pusat data (Server) aplikasi tujuan." },
+    { frac: 1.0, title: "Tahap 5 — Server Memproses & Mengirim Balik Respons", desc: "Server menerima permintaanmu, memproses informasi (misal memuat halaman profil), dan memancarkan balik sinyal jawaban melalui rute yang sama persis secara instan." }
+  ];
+
+  let playing = false;
+  let startTime = null;
+  const DURATION = 5500; // ms
+  let rafId = null;
+
+  function placePacketAtStart(){
+    const p = path.getPointAtLength(0);
+    packet.setAttribute('cx', p.x);
+    packet.setAttribute('cy', p.y);
+  }
+
+  function setStationActive(idx){
+    for(let i=0; i<5; i++){
+      if(rings[i]) rings[i].classList.toggle('active', i === idx);
+      if(labels[i]) labels[i].classList.toggle('active', i === idx);
+    }
+  }
+
+  function update(ts){
+    if(!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+    let t = Math.min(elapsed / DURATION, 1);
+    const len = t * totalLen;
+    const p = path.getPointAtLength(len);
+    packet.setAttribute('cx', p.x);
+    packet.setAttribute('cy', p.y);
+
+    let idx = 0;
+    for(let i=0; i<stages.length; i++){
+      if(t >= stages[i].frac - 0.001) idx = i;
+    }
+    setStationActive(idx);
+    stageTag.textContent = "Sedang berjalan · " + stages[idx].title.split("—")[0].trim();
+    stepNum.textContent = (idx+1);
+    stepTitle.textContent = stages[idx].title;
+    stepDesc.textContent = stages[idx].desc;
+
+    if(t < 1){
+      rafId = requestAnimationFrame(update);
+    } else {
+      playing = false;
+      playBtn.textContent = "▶ Mulai";
+      stageTag.textContent = "Selesai — data sudah kembali!";
+    }
+  }
+
+  function play(){
+    if(playing) return;
+    playing = true;
+    startTime = null;
+    playBtn.textContent = "⏸ Berjalan…";
+    rafId = requestAnimationFrame(update);
+  }
+
+  function reset(){
+    playing = false;
+    if(rafId) cancelAnimationFrame(rafId);
+    startTime = null;
+    placePacketAtStart();
+    setStationActive(-1);
+    stageTag.textContent = "Siap dimulai";
+    stepNum.textContent = "0";
+    stepTitle.textContent = "Belum dimulai";
+    stepDesc.textContent = 'Tekan tombol "Mulai" di atas untuk melihat data berangkat dari perangkatmu.';
+    playBtn.textContent = "▶ Mulai";
+  }
+
+  selectStageDirectly = function(idx) {
+    if(playing) reset();
+    const targetFrac = stages[idx].frac;
+    const len = targetFrac * totalLen;
+    const p = path.getPointAtLength(len);
+    packet.setAttribute('cx', p.x);
+    packet.setAttribute('cy', p.y);
+    setStationActive(idx);
+    stageTag.textContent = "Navigasi Manual · " + stages[idx].title.split("—")[0].trim();
+    stepNum.textContent = (idx+1);
+    stepTitle.textContent = stages[idx].title;
+    stepDesc.textContent = stages[idx].desc + " (Dipilih secara manual via klik).";
+  }
+
+  stations.forEach((station, index) => {
+    if(station) {
+      station.addEventListener('click', () => {
+        selectStageDirectly(index);
+      });
+    }
+  });
+
+  if(playBtn) playBtn.addEventListener('click', play);
+  if(resetBtn) resetBtn.addEventListener('click', reset);
+  placePacketAtStart();
+})();
+
+/* ---------------- PAGE NAVIGATION SYSTEM (klik ikon) ---------------- */
+let switchPage;
+let goToSimulationStage;
+(function(){
+  const pages = ['beranda','simulasi','tahapan','video','kuis','materi','tentang'];
+  const navBtns = document.querySelectorAll('.nav-icon-btn');
+  const sections = document.querySelectorAll('.page-section');
+
+  switchPage = function(targetId) {
+    sections.forEach(sec => {
+      sec.classList.toggle('active-page', sec.id === targetId);
+    });
+    navBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-page') === targetId);
+    });
+    window.scrollTo({top:0, behavior:'smooth'});
+    
+    // Matikan video otomatis jika pengguna keluar dari halaman video
+    if (targetId !== 'video') {
+      const vid = document.querySelector('.video-wrapper video');
+      if (vid) vid.pause();
+    }
+  }
+
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = btn.getAttribute('data-page');
+      switchPage(page);
+    });
+  });
+
+  goToSimulationStage = function(stageIdx) {
+    switchPage('simulasi');
+    setTimeout(() => {
+      if(typeof selectStageDirectly === 'function') selectStageDirectly(stageIdx);
+    }, 450);
+  }
+})();
+
+/* ---------------- LOCAL STORAGE & DATABASE MOCK ---------------- */
+const TEACHER_ACCOUNT = { username: 'guru', password: 'guru123' };
+function getStudents(){ return JSON.parse(localStorage.getItem('internetku_students') || '[]'); }
+function saveStudents(list){ localStorage.setItem('internetku_students', JSON.stringify(list)); }
+function getScores(){ return JSON.parse(localStorage.getItem('internetku_scores') || '{}'); }
+function saveScores(obj){ localStorage.setItem('internetku_scores', JSON.stringify(obj)); }
+function getMateri(){ return JSON.parse(localStorage.getItem('internetku_materi') || '[]'); }
+function saveMateri(list){ localStorage.setItem('internetku_materi', JSON.stringify(list)); }
+
+(function initDefaultStudents(){
+  if (localStorage.getItem('internetku_students')) return;
+  const defaults = [];
+  for (let i = 1; i <= 15; i++){
+    const suffix = String(i).padStart(3, '0');
+    defaults.push({ username: '11358' + suffix, password: 'IK' + suffix + '!' });
+  }
+  saveStudents(defaults);
+})();
+
+/* ---------------- AUTH / LOGIN SECURITY SYSTEM ---------------- */
+(function(){
+  const loginScreen = document.getElementById('loginScreen');
+  const mainContent = document.getElementById('mainContent');
+  const teacherDashboard = document.getElementById('teacherDashboard');
+  const loginBtn = document.getElementById('loginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const teacherLogoutBtn = document.getElementById('teacherLogoutBtn');
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  const loginError = document.getElementById('loginError');
+  const tabSiswa = document.getElementById('tabSiswa');
+  const tabGuru = document.getElementById('tabGuru');
+  const loginTitle = document.getElementById('loginTitle');
+  const loginSubtitle = document.getElementById('loginSubtitle');
+  const usernameLabel = document.getElementById('usernameLabel');
+  const loginHint = document.getElementById('loginHint');
+  const navUserBadge = document.getElementById('navUserBadge');
+  let loginRole = 'siswa';
+
+  function setLoginRole(role){
+    loginRole = role;
+    tabSiswa.classList.toggle('active', role === 'siswa');
+    tabGuru.classList.toggle('active', role === 'guru');
+    loginError.style.display = 'none';
+    usernameInput.value = ''; passwordInput.value = '';
+    usernameInput.style.borderColor = ''; passwordInput.style.borderColor = '';
+
+    if (role === 'siswa'){
+      loginTitle.textContent = 'Masuk ke InterNetKu';
+      loginSubtitle.textContent = 'Gunakan Nomor Induk Siswa (NIS) dan kata sandi yang diberikan gurumu.';
+      usernameLabel.textContent = 'Nomor Induk Siswa (NIS)';
+      usernameInput.placeholder = 'Contoh: 11358001';
+      loginHint.textContent = 'NIS terdaftar: 11358001 s/d 11358015. Tanyakan kata sandimu ke guru.';
+    } else {
+      loginTitle.textContent = 'Masuk sebagai Guru';
+      loginSubtitle.textContent = 'Halaman khusus panel guru pengajar informatika kelas.';
+      usernameLabel.textContent = 'Username ';
+      usernameInput.placeholder = 'Masukkan username';
+      loginHint.textContent = 'Gunakan akun default.';
+    }
+  }
+
+  if(tabSiswa) tabSiswa.addEventListener('click', () => setLoginRole('siswa'));
+  if(tabGuru) tabGuru.addEventListener('click', () => setLoginRole('guru'));
+
+  function showApp(){
+    const role = sessionStorage.getItem('internetku_role');
+    const user = sessionStorage.getItem('internetku_user');
+    if (role === 'guru'){
+      loginScreen.style.display = 'none';
+      mainContent.style.display = 'none';
+      teacherDashboard.style.display = 'block';
+      if(typeof renderTeacherDashboard === 'function') renderTeacherDashboard();
+    } else if (role === 'siswa'){
+      loginScreen.style.display = 'none';
+      teacherDashboard.style.display = 'none';
+      mainContent.style.display = 'block';
+      if(navUserBadge) navUserBadge.textContent = "Siswa: " + user;
+      switchPage('beranda');
+      renderStudentMateri();
+      renderQuestion();
+    } else {
+      loginScreen.style.display = 'flex';
+      mainContent.style.display = 'none';
+      teacherDashboard.style.display = 'none';
+    }
+  }
+
+  function handleLogin(){
+    const user = usernameInput.value.trim();
+    const pass = passwordInput.value;
+    let success = false;
+
+    if (loginRole === 'guru') {
+      if (user === TEACHER_ACCOUNT.username && pass === TEACHER_ACCOUNT.password) {
+        sessionStorage.setItem('internetku_role', 'guru');
+        sessionStorage.setItem('internetku_user', user);
+        success = true;
+      }
+    } else {
+      const students = getStudents();
+      const match = students.find(s => s.username === user && s.password === pass);
+      if (match) {
+        sessionStorage.setItem('internetku_role', 'siswa');
+        sessionStorage.setItem('internetku_user', user);
+        success = true;
+      }
+    }
+
+    if (success) {
+      loginError.style.display = 'none';
+      loginScreen.style.transition = 'opacity 0.4s ease';
+      loginScreen.style.opacity = '0';
+      setTimeout(() => { loginScreen.style.opacity = '1'; showApp(); }, 400);
+    } else {
+      loginError.textContent = loginRole === 'guru' ? 'Nama pengguna atau kata sandi guru salah.' : 'NIS atau kata sandi salah. Coba lagi.';
+      loginError.style.display = 'block';
+      usernameInput.style.borderColor = 'var(--coral)';
+      passwordInput.style.borderColor = 'var(--coral)';
+    }
+  }
+
+  if(loginBtn) loginBtn.addEventListener('click', handleLogin);
+  if(passwordInput) {
+    passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+  }
+
+  function doLogout(){
+    sessionStorage.removeItem('internetku_role');
+    sessionStorage.removeItem('internetku_user');
+    window.location.reload();
+  }
+  if(logoutBtn) logoutBtn.addEventListener('click', doLogout);
+  if(teacherLogoutBtn) teacherLogoutBtn.addEventListener('click', doLogout);
+
+  showApp();
+})();
+
+/* ---------------- MATERI SISWA (tampilan baca) ---------------- */
+function renderStudentMateri(){
+  const list = getMateri();
+  const container = document.getElementById('studentMateriList');
+  if (!container) return;
+  if (list.length === 0){
+    container.innerHTML = '<p class="empty-note">Belum ada materi yang dibagikan oleh guru. Cek kembali nanti ya!</p>';
+    return;
+  }
+  container.innerHTML = list.slice().reverse().map(m => `
+    <div class="materi-card">
+      <div class="materi-head">
+        <h4>${escapeHtml(m.title)}</h4>
+        <span class="materi-date">${escapeHtml(m.date)}</span>
+      </div>
+      <p>${escapeHtml(m.content)}</p>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+/* ---------------- DASHBOARD GURU ---------------- */
+let renderTeacherDashboard;
+(function(){
+  const navBtns = document.querySelectorAll('.teacher-tab-btn');
+  const panels = document.querySelectorAll('.teacher-panel');
+
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      navBtns.forEach(b => b.classList.toggle('active', b === btn));
+      panels.forEach(p => p.classList.toggle('active-panel', p.id === btn.getAttribute('data-panel')));
+    });
+  });
+
+  renderTeacherDashboard = function() {
+    renderScoreTable();
+    renderTeacherMateriList();
+    renderAccountTable();
+  }
+
+  function renderScoreTable(){
+    const scores = getScores();
+    const tbody = document.getElementById('scoreTableBody');
+    if (!tbody) return;
+    const entries = Object.entries(scores);
+    if (entries.length === 0){
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-note">Belum ada siswa yang menyelesaikan kuis.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = entries.map(([nis, data]) => {
+      const percentage = Math.round((data.score / data.total) * 100);
+      const isPass = percentage >= 70;
+      return `
+        <tr>
+          <td><strong>${escapeHtml(nis)}</strong></td>
+          <td><span class="badge ${isPass ? 'badge-done' : 'badge-pending'}">${percentage} / 100</span></td>
+          <td>Benar ${data.score} dari ${data.total} soal</td>
+          <td style="color:var(--muted); font-size:.82rem;">${escapeHtml(data.date)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderTeacherMateriList(){
+    const list = getMateri();
+    const container = document.getElementById('teacherMateriList');
+    if (!container) return;
+    if (list.length === 0){
+      container.innerHTML = '<p class="empty-note">Belum ada materi dibagikan.</p>';
+      return;
+    }
+    container.innerHTML = list.slice().reverse().map(m => `
+      <div class="materi-card" style="border-color:rgba(255,255,255,.05);">
+        <div class="materi-head">
+          <h4 style="color:var(--text);">${escapeHtml(m.title)}</h4>
+          <span class="materi-date">${escapeHtml(m.date)}</span>
+        </div>
+        <p>${escapeHtml(m.content)}</p>
+        <div style="margin-top:12px;"><button class="btn-small btn-danger" data-delete-materi="${m.id}">Hapus</button></div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('[data-delete-materi]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-delete-materi');
+        const updated = getMateri().filter(m => String(m.id) !== id);
+        saveMateri(updated);
+        renderTeacherMateriList();
+      });
+    });
+  }
+
+  function renderAccountTable(){
+    const students = getStudents();
+    const tbody = document.getElementById('accountTableBody');
+    if (!tbody) return;
+    if (students.length === 0){
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-note">Belum ada akun siswa.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td>${escapeHtml(s.username)}</td>
+        <td>${escapeHtml(s.password)}</td>
+        <td><button class="btn-small btn-danger" data-delete-user="${escapeHtml(s.username)}">Hapus</button></td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-delete-user]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uname = btn.getAttribute('data-delete-user');
+        if (!confirm('Hapus akun siswa ' + uname + '?')) return;
+        const updated = getStudents().filter(s => s.username !== uname);
+        saveStudents(updated);
+        renderAccountTable();
+      });
+    });
+  }
+
+  const addMateriBtn = document.getElementById('addMateriBtn');
+  if (addMateriBtn){
+    addMateriBtn.addEventListener('click', () => {
+      const titleInput = document.getElementById('materiTitle');
+      const contentInput = document.getElementById('materiContent');
+      const title = titleInput.value.trim();
+      const content = contentInput.value.trim();
+      if (!title || !content){ alert('Judul dan isi materi tidak boleh kosong.'); return; }
+
+      const list = getMateri();
+      list.push({
+        id: Date.now(), title, content,
+        date: new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })
+      });
+      saveMateri(list);
+      titleInput.value = ''; contentInput.value = '';
+      renderTeacherMateriList();
+    });
+  }
+
+  const addStudentBtn = document.getElementById('addStudentBtn');
+  if (addStudentBtn){
+    addStudentBtn.addEventListener('click', () => {
+      const userIn = document.getElementById('newStudentUser');
+      const passIn = document.getElementById('newStudentPass');
+      const errEl = document.getElementById('accountError');
+      const u = userIn.value.trim(); const p = passIn.value.trim();
+      if(!u || !p){ alert('NIS dan sandi wajib diisi.'); return; }
+      
+      const students = getStudents();
+      if (students.some(s => s.username === u)){
+        errEl.textContent = "NIS sudah terdaftar sebelumnya."; errEl.style.display = 'block'; return;
+      }
+      errEl.style.display = 'none';
+      students.push({ username: u, password: p });
+      saveStudents(students);
+      userIn.value = ''; passIn.value = '';
+      renderAccountTable();
+    });
+  }
+})();
+
+/* ---------------- INTERACTIVE KUIS SYSTEM (15 Soal) ---------------- */
+(function(){
+  const questions = [
+    {
+      q: "Apa yang pertama kali dilakukan perangkatmu sebelum data dikirim?",
+      opts: ["Mengubah pesan jadi sinyal digital", "Langsung mencetak pesan", "Menghapus riwayat browser", "Mematikan wifi"],
+      correct: 0,
+      fb: "Benar! Perangkat mengubah pesan menjadi sinyal digital (0 dan 1) terlebih dulu."
+    },
+    {
+      q: "Router/modem di rumah berfungsi untuk...",
+      opts: ["Menyimpan foto", "Meneruskan sinyal keluar menuju jaringan luar", "Mengisi daya laptop", "Menyalakan lampu"],
+      correct: 1,
+      fb: "Tepat! Router meneruskan sinyal dari perangkatmu menuju jaringan di luar rumah."
+    },
+    {
+      q: "ISP adalah singkatan dari...",
+      opts: ["Internet Service Provider", "Internal System Program", "International Server Path", "Instant Signal Processor"],
+      correct: 0,
+      fb: "Betul, ISP = Internet Service Provider, penyedia layanan internet."
+    },
+    {
+      q: "Setelah sampai di server, apa yang terjadi?",
+      opts: ["Data hilang begitu saja", "Data diproses sesuai permintaan", "Data dikembalikan mentah tanpa diproses", "Server mati otomatis"],
+      correct: 1,
+      fb: "Benar — server memproses data sesuai permintaan yang dikirim."
+    },
+    {
+      q: "Bagaimana respons dari server sampai kembali ke perangkatmu?",
+      opts: ["Lewat jalur yang sama secara terbalik", "Lewat pos surat", "Tidak pernah kembali", "Lewat perangkat orang lain"],
+      correct: 0,
+      fb: "Tepat sekali — respons melewati jalur yang sama, hanya arahnya terbalik."
+    },
+    {
+      q: "Data yang dikirim lewat internet pada dasarnya berbentuk...",
+      opts: ["Suara analog murni", "Kumpulan angka 0 dan 1 (bit)", "Tulisan tangan digital", "Gambar statis saja"],
+      correct: 1,
+      fb: "Benar — semua data diubah menjadi sinyal digital berupa deretan bit (0 dan 1)."
+    },
+    {
+      q: "Apa fungsi utama Wi-Fi di rumah dalam perjalanan data?",
+      opts: ["Menggantikan fungsi ISP sepenuhnya", "Menghubungkan perangkat ke router tanpa kabel", "Memperlambat koneksi dengan sengaja", "Menyimpan cadangan data secara permanen"],
+      correct: 1,
+      fb: "Tepat — Wi-Fi menghubungkan perangkatmu ke router secara nirkabel sebelum data diteruskan."
+    },
+    {
+      q: "Setelah keluar dari router rumah, ke mana sinyal data berikutnya pergi?",
+      opts: ["Langsung ke server tujuan tanpa perantara", "Menuju jaringan ISP", "Kembali ke perangkat itu sendiri", "Berhenti di dalam rumah"],
+      correct: 1,
+      fb: "Benar — sinyal diteruskan menuju jaringan ISP sebelum masuk ke internet global."
+    },
+    {
+      q: "Mengapa disebut 'internet global' pada salah satu tahap perjalanan data?",
+      opts: ["Karena data hanya beredar di satu kota", "Karena menghubungkan jaringan-jaringan di seluruh dunia", "Karena hanya digunakan pemerintah", "Karena datanya berhenti sementara di sana"],
+      correct: 1,
+      fb: "Tepat — internet global adalah kumpulan jaringan yang saling terhubung di seluruh dunia."
+    },
+    {
+      q: "Apa yang dimaksud dengan 'server' dalam simulasi ini?",
+      opts: ["Perangkat milik pengirim pesan", "Komputer yang menyimpan dan memproses permintaan dari pengguna", "Kabel penghubung rumah dan jalan", "Aplikasi pengedit foto"],
+      correct: 1,
+      fb: "Benar — server adalah komputer yang menerima, memproses, dan membalas permintaan dari pengguna."
+    },
+    {
+      q: "Mengapa proses seluruh perjalanan data (pergi dan kembali) biasanya terasa sangat cepat bagi kita?",
+      opts: ["Karena data sebenarnya tidak berpindah sama sekali", "Karena sinyal bergerak dengan kecepatan sangat tinggi mendekati kecepatan cahaya", "Karena server selalu berada tepat di sebelah rumah kita", "Karena hanya melewati satu tahap saja"],
+      correct: 1,
+      fb: "Tepat — sinyal data merambat sangat cepat, mendekati kecepatan cahaya, sehingga terasa instan."
+    },
+    {
+      q: "Dalam simulasi, siapa yang berperan mengirim pesan pertama kali?",
+      opts: ["Bima", "Sinta", "Server", "Router"],
+      correct: 1,
+      fb: "Benar — Sinta mengirim pesan lewat laptopnya, memicu seluruh perjalanan data."
+    },
+    {
+      q: "Apa yang terjadi jika salah satu tahap (misalnya router) mengalami gangguan?",
+      opts: ["Data tetap sampai tanpa masalah", "Perjalanan data bisa terhambat atau gagal", "Server otomatis memperbaikinya sendiri", "Tidak berpengaruh sama sekali"],
+      correct: 1,
+      fb: "Tepat — jika salah satu tahap terganggu, perjalanan data bisa terhambat atau bahkan gagal sampai tujuan."
+    },
+    {
+      q: "Prinsip 'segmenting' yang diterapkan pada media InterNetKu bertujuan untuk...",
+      opts: ["Membuat materi terlihat lebih rumit", "Memecah proses panjang menjadi bagian-bagian kecil yang mudah dipahami", "Menyembunyikan sebagian informasi dari siswa", "Mengurangi jumlah animasi"],
+      correct: 1,
+      fb: "Benar — segmenting memecah proses abstrak menjadi tahap-tahap kecil agar lebih mudah dipahami."
+    },
+    {
+      q: "Secara berurutan, manakah rangkaian tahap perjalanan data yang benar?",
+      opts: ["Server → Router → ISP → Perangkat → Internet Global", "Perangkat → Router → ISP → Internet Global → Server", "ISP → Perangkat → Server → Router → Internet Global", "Internet Global → Server → Perangkat → ISP → Router"],
+      correct: 1,
+      fb: "Tepat — urutannya adalah Perangkat, Router, ISP, Internet Global, lalu Server (dan kembali lagi)."
+    }
+  ];
+
+  let current = 0;
+  let score = 0;
+  const progress = document.getElementById('quizProgress');
+  const scoreEl = document.getElementById('quizScore');
+  const body = document.getElementById('quizBody');
+
+  renderQuestion = function() {
+    if (!body) return;
+    if (current >= questions.length) {
+      progress.textContent = "Kuis Selesai!";
+      body.innerHTML = `
+        <div class="quiz-done">
+          <p class="big">Selamat!</p>
+          <p>Kamu telah menyelesaikan seluruh soal simulasi Cara Kerja Internet.</p>
+          <div style="margin: 20px 0;">
+            <span class="badge badge-done" style="font-size:1.4rem; padding:8px 24px;">Skor Akhir: ${score} / ${questions.length}</span>
+          </div>
+          <button class="btn btn-primary" id="retryBtn">↺ Ulangi Kuis</button>
+        </div>
+      `;
+      
+      const uname = sessionStorage.getItem('internetku_user');
+      if (uname && uname !== 'guru') {
+        const scores = getScores();
+        scores[uname] = {
+          score, total: questions.length,
+          date: new Date().toLocaleString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+        };
+        saveScores(scores);
+      }
+      
+      document.getElementById('retryBtn').addEventListener('click', ()=>{
+        current = 0; score = 0; scoreEl.textContent = "Skor: 0"; renderQuestion();
+      });
+      return;
+    }
+
+    const item = questions[current];
+    progress.textContent = `Soal ${current+1} / ${questions.length}`;
+    body.innerHTML = `
+      <p class="q-text">${item.q}</p>
+      <div class="opts">
+        ${item.opts.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join("")}
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="quiz-nav"><button class="btn btn-ghost" id="nextBtn" disabled>Lanjut →</button></div>
+    `;
+
+    const optBtns = body.querySelectorAll('.opt');
+    const feedback = document.getElementById('feedback');
+    const nextBtn = document.getElementById('nextBtn');
+
+    optBtns.forEach(btn=>{
+      btn.addEventListener('click', ()=> {
+        optBtns.forEach(b=>b.disabled = true);
+        const i = parseInt(btn.dataset.i, 10);
+        if(i === item.correct){
+          btn.classList.add('correct');
+          score++;
+          scoreEl.textContent = "Skor: " + score;
+          feedback.innerHTML = `<span style="color:var(--mint)">✅ Betul!</span> ` + item.fb;
+        } else {
+          btn.classList.add('wrong');
+          optBtns[item.correct].classList.add('correct');
+          feedback.innerHTML = `<span style="color:var(--coral)">❌ Salah!</span> ` + item.fb;
+        }
+        nextBtn.disabled = false;
+      });
+    });
+
+    nextBtn.addEventListener('click', ()=>{
+      current++;
+      renderQuestion();
+    });
+  }
+})();
+</script>
+</body>
+</html>
